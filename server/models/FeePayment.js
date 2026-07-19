@@ -91,4 +91,10 @@ const feePaymentSchema = new mongoose.Schema(
   }
 );
 
+// Compound index to optimize single-student ledger lookups with receipt date sorting
+feePaymentSchema.index({ student: 1, receiptDate: -1 });
+
+// Single index to optimize dashboard monthly stats aggregations filtering by date
+feePaymentSchema.index({ receiptDate: 1 });
+
 module.exports = mongoose.model('FeePayment', feePaymentSchema);

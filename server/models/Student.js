@@ -247,6 +247,9 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
+// Compound index to optimize queries that filter by status, class, and section
+studentSchema.index({ isActive: 1, isRemoved: 1, class: 1, section: 1 });
+
 // Query helpers/Virtuals if needed
 studentSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
