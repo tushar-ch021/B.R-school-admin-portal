@@ -92,13 +92,10 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date() });
 });
 
-// Serve frontend static assets in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
-  });
-}
+// Root endpoint welcome check
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'B.R. International School Admin Portal API is running.' });
+});
 
 // Centralized error handling middleware (must be registered last)
 app.use(errorHandler);
