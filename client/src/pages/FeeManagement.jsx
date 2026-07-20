@@ -68,7 +68,7 @@ const FeeManagement = () => {
         search,
         limit: 1000 // Get all matched students for fee management selector list
       });
-      setStudents(Array.isArray(data.students) ? data.students : []);
+      setStudents(Array.isArray(data?.students) ? data.students : []);
     } catch (err) {
       toast.error('Failed to retrieve students database directories');
     } finally {
@@ -96,7 +96,8 @@ const FeeManagement = () => {
     setHistoryOpen(true);
     try {
       const logs = await feeService.getFeeHistory(student._id);
-      setHistoryPayments(logs);
+      // Defensive: ensure logs is always an array to prevent .map() TypeError
+      setHistoryPayments(Array.isArray(logs) ? logs : []);
     } catch (err) {
       toast.error('Failed to query fee transactions log history');
       setHistoryOpen(false);

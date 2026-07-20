@@ -191,7 +191,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   const { className, section } = req.query;
 
   // 1. Total Active Students (conditional class and section filter)
-  const studentQuery = { isActive: true };
+  const studentQuery = { isActive: true, isRemoved: { $ne: true } };
   if (className) {
     studentQuery.class = className;
   }
@@ -204,7 +204,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   const date = new Date();
   const currentYear = date.getFullYear();
   const academicCycle = `${currentYear}-${currentYear + 1}`;
-  const yearQuery = { isActive: true, academicYear: academicCycle };
+  const yearQuery = { isActive: true, isRemoved: { $ne: true }, academicYear: academicCycle };
   if (className) {
     yearQuery.class = className;
   }
@@ -214,7 +214,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   const studentsThisYear = await Student.countDocuments(yearQuery);
 
   // 3. Active Students using transport routes
-  const transportQuery = { isActive: true, usesTransport: true };
+  const transportQuery = { isActive: true, isRemoved: { $ne: true }, usesTransport: true };
   if (className) {
     transportQuery.class = className;
   }
@@ -267,7 +267,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   const monthlyFeeCollected = aggregation.length > 0 ? aggregation[0].monthlyCollected : 0;
 
   // 5. Recent 5 admissions listings
-  const recentQuery = { isActive: true };
+  const recentQuery = { isActive: true, isRemoved: { $ne: true } };
   if (className) {
     recentQuery.class = className;
   }

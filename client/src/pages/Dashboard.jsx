@@ -100,6 +100,9 @@ const Dashboard = () => {
     recentAdmissions = []
   } = stats || {};
 
+  // Defensive: ensure recentAdmissions is always an array to prevent .map() TypeError
+  const safeRecentAdmissions = Array.isArray(recentAdmissions) ? recentAdmissions : [];
+
   return (
     <div className="space-y-6">
       {/* Welcome banner */}
@@ -314,13 +317,13 @@ const Dashboard = () => {
             </button>
           </div>
 
-          {recentAdmissions.length === 0 ? (
+          {safeRecentAdmissions.length === 0 ? (
             <div className="flex h-36 items-center justify-center text-xs text-gray-400">
               No recent student records found.
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {recentAdmissions.map((student) => (
+              {safeRecentAdmissions.map((student) => (
                 <div key={student._id} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-250 bg-gray-50">

@@ -93,7 +93,8 @@ const StudentProfilePage = () => {
       setStudent(studentData);
       
       const paymentsData = await feeService.getFeeHistory(id);
-      setPayments(paymentsData);
+      // Defensive: ensure payments is always an array to prevent .map() TypeError
+      setPayments(Array.isArray(paymentsData) ? paymentsData : []);
     } catch (err) {
       toast.error('Failed to retrieve student profile logs');
     } finally {

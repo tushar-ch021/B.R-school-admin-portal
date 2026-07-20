@@ -1,6 +1,9 @@
 /**
  * Native Browser Print Utility (React 19 Compatible)
  * Prints any DOM element inside a temporary hidden iframe without external package dependencies.
+ *
+ * Fixes: First-time print showing blank/unstyled content by waiting for all
+ * stylesheets and fonts to fully load before invoking the browser print dialog.
  */
 export const printElement = (element, title = 'Print Document') => {
   if (!element) {
@@ -94,21 +97,73 @@ export const printElement = (element, title = 'Print Document') => {
   `);
   iframeDoc.close();
 
-  // Wait for web fonts & media assets to settle before invoking browser print dialog
-  setTimeout(() => {
+  /**
+   * Wait for all linked stylesheets inside the iframe to finish loading,
+   * then wait for web fonts to be ready, and finally trigger print.
+   * This prevents the "blank first print" issue where styles haven't
+   * been applied when the print dialog opens too early.
+   */
+  const waitForStylesAndFonts = async () => {
+    const iframeWindow = iframe.contentWindow;
+    const iframeDocument = iframeWindow.document;
+
+    // 1. Collect all stylesheet <link> elements in the iframe and wait for each to load
+    const stylesheetLinks = Array.from(iframeDocument.querySelectorAll('link[rel="stylesheet"]'));
+    const stylesheetLoadPromises = stylesheetLinks.map((link) => {
+      if (link.sheet && link.sheet.cssRules) {
+        // Already loaded
+        return Promise.resolve();
+      }
+      return new Promise((resolve) => {
+        link.addEventListener('load', resolve, { once: true });
+        link.addEventListener('error', resolve, { once: true });
+      });
+    });
+    await Promise.all(stylesheetLoadPromises);
+
+    // 2. Wait for fonts to be ready (if supported)
+    if (iframeDocument.fonts && iframeDocument.fonts.ready) {
+      try {
+        await iframeDocument.fonts.ready;
+      } catch (e) {
+        // Non-critical, proceed to print
+      }
+    }
+
+    // 3. Wait for images to decode if any
+    const images = Array.from(iframeDocument.getElementsByTagName('img'));
+    const imagePromises = images.map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', resolve, { once: true });
+      });
+    });
+    await Promise.all(imagePromises);
+
+    // 4. Small final settle delay to ensure browser layout is fully computed
+    await new Promise((r) => setTimeout(r, 150));
+  };
+
+  // Use the iframe's native load event as the starting point, then additionally
+  // wait for styles, fonts, and images. This is much more reliable than a raw setTimeout.
+  iframe.addEventListener('load', async () => {
     try {
+      await waitForStylesAndFonts();
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
     } catch (e) {
       console.error('Failed to trigger browser print dialog:', e);
     } finally {
+      // Keep iframe alive longer so the print dialog can finish rendering.
+      // Removing too early causes the print preview to go blank.
       setTimeout(() => {
         if (document.body.contains(iframe)) {
           document.body.removeChild(iframe);
         }
-      }, 1500);
+      }, 3000);
     }
-  }, 400);
+  });
 };
 
 export default printElement;

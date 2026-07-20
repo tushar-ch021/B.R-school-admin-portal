@@ -17,7 +17,7 @@ const DataTable = ({
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!data || !Array.isArray(data) || data.length === 0) {
     return (
       <div className="rounded-lg border border-gray-100 bg-white p-8 shadow-xs">
         <EmptyState message={emptyMessage} />
