@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -8,8 +9,14 @@ const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middleware/errorMiddleware');
 
-// Resolve the React production build directory (client builds into ../server/dist)
-const clientBuildPath = path.join(__dirname, 'dist');
+// Resolve the React production build directory (supports both server/dist and client/dist)
+const serverDistPath = path.join(__dirname, 'dist');
+const clientDistPath = path.join(__dirname, '../client/dist');
+const clientBuildPath = fs.existsSync(serverDistPath)
+  ? serverDistPath
+  : fs.existsSync(clientDistPath)
+  ? clientDistPath
+  : serverDistPath;
 
 // Validate critical security environment variables immediately on load
 if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
@@ -87,8 +94,16 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
-// Serve React production static assets (CSS, JS, images, fonts, etc.)
-app.use(express.static(clientBuildPath));
+// Serve React production static assets (CSS, JS, images, fonts, etc.) with strict MIME type headers
+app.use(express.static(clientBuildPath, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js') || filePath.endsWith('.mjs')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+    } else if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css; charset=UTF-8');
+    }
+  }
+}));
 
 // Define API Route handlers
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -104,8 +119,13 @@ app.get('/health', (req, res) => {
 // SPA catch-all: For any GET request that doesn't match an API route or static file,
 // serve the React index.html so client-side routing can handle the URL.
 // This prevents 404 errors when users reload the page on routes like /students, /fees, etc.
-app.get('*', (req, res) => {
-  res.sendFile(path.join(clientBuildPath, 'index.html'));
+app.get('*', (req, res, next) => {
+  const indexPath = path.join(clientBuildPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    next();
+  }
 });
 
 // Centralized error handling middleware (must be registered last)
