@@ -54,7 +54,7 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
           { 
             particular: 'Tuition Fee', 
             dueDate: new Date().toISOString().split('T')[0], 
-            dues: 0, 
+            dues: remainingTuition, 
             received: 0 
           }
         ];
@@ -63,7 +63,7 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
           items.push({ 
             particular: 'Transport Fee', 
             dueDate: new Date().toISOString().split('T')[0], 
-            dues: 0, 
+            dues: remainingTransport, 
             received: 0 
           });
         }
@@ -97,7 +97,7 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
   const addCustomItem = () => {
     setFeeItems([
       ...feeItems,
-      { particular: 'Exam Fee', dueDate: new Date().toISOString().split('T')[0], dues: 1500, received: 1500 }
+      { particular: 'Exam Fee', dueDate: new Date().toISOString().split('T')[0], dues: 0, received: 0 }
     ]);
   };
 
