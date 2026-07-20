@@ -110,13 +110,16 @@ export const printElement = (element, title = 'Print Document') => {
     // 1. Collect all stylesheet <link> elements in the iframe and wait for each to load
     const stylesheetLinks = Array.from(iframeDocument.querySelectorAll('link[rel="stylesheet"]'));
     const stylesheetLoadPromises = stylesheetLinks.map((link) => {
-      if (link.sheet && link.sheet.cssRules) {
-        // Already loaded
-        return Promise.resolve();
-      }
+      // Do not inspect `link.sheet.cssRules`: browsers block that property for
+      // cross-origin stylesheets (including CDN fonts), even when the sheet has
+      // loaded successfully. The link's load/error events are sufficient here.
       return new Promise((resolve) => {
         link.addEventListener('load', resolve, { once: true });
         link.addEventListener('error', resolve, { once: true });
+
+        // A cached sheet can already be complete before listeners are attached.
+        // `sheet` itself is safe to read; avoid cssRules because it can throw.
+        if (link.sheet) resolve();
       });
     });
     await Promise.all(stylesheetLoadPromises);

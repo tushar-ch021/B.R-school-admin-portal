@@ -105,8 +105,8 @@ const admitStudent = asyncHandler(async (req, res) => {
   const serialNo = await generateStudentSerial(academicYear);
 
   const isTransport = usesTransport === 'true' || usesTransport === true;
-  const parsedTuition = tuitionFee !== undefined ? (Number(tuitionFee) || 0) : 12000;
-  const parsedTransport = transportFee !== undefined ? (Number(transportFee) || 0) : 1800;
+  const parsedTuition = tuitionFee !== undefined ? (Number(tuitionFee) || 0) : 0;
+  const parsedTransport = transportFee !== undefined ? (Number(transportFee) || 0) : 0;
   const calculatedTotalFee = parsedTuition + (isTransport ? parsedTransport : 0);
 
   const student = await Student.create({
@@ -293,8 +293,8 @@ const updateStudent = asyncHandler(async (req, res) => {
   const isTransport = req.body.usesTransport !== undefined
     ? (req.body.usesTransport === 'true' || req.body.usesTransport === true)
     : student.usesTransport;
-  const tuition = req.body.tuitionFee !== undefined ? (Number(req.body.tuitionFee) || 0) : (student.tuitionFee || 12000);
-  const transport = req.body.transportFee !== undefined ? (Number(req.body.transportFee) || 0) : (student.transportFee || 1800);
+  const tuition = req.body.tuitionFee !== undefined ? (Number(req.body.tuitionFee) || 0) : (student.tuitionFee ?? 0);
+  const transport = req.body.transportFee !== undefined ? (Number(req.body.transportFee) || 0) : (student.transportFee ?? 0);
   const total = tuition + (isTransport ? transport : 0);
 
   const fieldsToUpdate = {

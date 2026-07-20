@@ -200,17 +200,17 @@ const studentSchema = new mongoose.Schema(
     // Assigned Fee Structure (Single Source of Truth)
     tuitionFee: {
       type: Number,
-      default: 12000,
+      default: 0,
       min: [0, 'Tuition fee cannot be negative']
     },
     transportFee: {
       type: Number,
-      default: 1800,
+      default: 0,
       min: [0, 'Transport fee cannot be negative']
     },
     totalFee: {
       type: Number,
-      default: 12000,
+      default: 0,
       min: [0, 'Total fee cannot be negative']
     },
     // Transfer Certificate Details

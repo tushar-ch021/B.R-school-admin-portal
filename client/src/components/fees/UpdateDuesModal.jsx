@@ -5,8 +5,8 @@ import { IndianRupee, Save, Calculator, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const UpdateDuesModal = ({ student, isOpen, onClose, onSuccess }) => {
-  const [tuitionFee, setTuitionFee] = useState(12000);
-  const [transportFee, setTransportFee] = useState(1800);
+  const [tuitionFee, setTuitionFee] = useState(0);
+  const [transportFee, setTransportFee] = useState(0);
   const [feeSummary, setFeeSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -19,8 +19,8 @@ const UpdateDuesModal = ({ student, isOpen, onClose, onSuccess }) => {
       try {
         const summary = await feeService.getStudentFeeSummary(student._id);
         setFeeSummary(summary);
-        setTuitionFee(summary.tuitionFee || 12000);
-        setTransportFee(summary.transportFee || 1800);
+        setTuitionFee(summary.tuitionFee ?? 0);
+        setTransportFee(summary.transportFee ?? 0);
       } catch (err) {
         toast.error('Failed to load student current fee structure');
       } finally {
