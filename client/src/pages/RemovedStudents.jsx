@@ -28,7 +28,17 @@ const RemovedStudents = () => {
         search
       });
       // Support both paginated response and legacy array response
-      setStudents(Array.isArray(data) ? data : (data.students || []));
+      // Defensive: ensure we always set an array to prevent e.map TypeError
+      let studentsList = [];
+      if (Array.isArray(data)) {
+        studentsList = data;
+      } else if (data && Array.isArray(data.students)) {
+        studentsList = data.students;
+      } else if (data && typeof data === 'object') {
+        // Unexpected response shape — log and fall back to empty
+        console.warn('getRemovedStudents returned unexpected shape:', data);
+      }
+      setStudents(studentsList);
     } catch (err) {
       toast.error('Failed to load removed students');
     } finally {

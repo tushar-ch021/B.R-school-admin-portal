@@ -54,8 +54,8 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
           { 
             particular: 'Tuition Fee', 
             dueDate: new Date().toISOString().split('T')[0], 
-            dues: remainingTuition, 
-            received: remainingTuition 
+            dues: 0, 
+            received: 0 
           }
         ];
         
@@ -63,21 +63,19 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
           items.push({ 
             particular: 'Transport Fee', 
             dueDate: new Date().toISOString().split('T')[0], 
-            dues: remainingTransport, 
-            received: remainingTransport 
+            dues: 0, 
+            received: 0 
           });
         }
         
         setFeeItems(items);
       } catch (err) {
         console.error('Failed to load student fee summary:', err);
-        const fallbackTuition = student.tuitionFee !== undefined ? student.tuitionFee : 12000;
-        const fallbackTransport = student.transportFee !== undefined ? student.transportFee : 1800;
         const fallback = [
-          { particular: 'Tuition Fee', dueDate: new Date().toISOString().split('T')[0], dues: fallbackTuition, received: fallbackTuition }
+          { particular: 'Tuition Fee', dueDate: new Date().toISOString().split('T')[0], dues: 0, received: 0 }
         ];
         if (student.usesTransport) {
-          fallback.push({ particular: 'Transport Fee', dueDate: new Date().toISOString().split('T')[0], dues: fallbackTransport, received: fallbackTransport });
+          fallback.push({ particular: 'Transport Fee', dueDate: new Date().toISOString().split('T')[0], dues: 0, received: 0 });
         }
         setFeeItems(fallback);
       }

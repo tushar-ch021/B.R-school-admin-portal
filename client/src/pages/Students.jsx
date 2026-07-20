@@ -45,7 +45,7 @@ const Students = () => {
         page: currentPage,
         limit: 20
       });
-      setStudents(data.students || []);
+      setStudents(Array.isArray(data?.students) ? data.students : []);
       setTotalPages(data.totalPages || 1);
       setTotalCount(data.totalCount || 0);
     } catch (err) {

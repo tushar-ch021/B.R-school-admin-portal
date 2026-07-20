@@ -8,6 +8,9 @@ const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middleware/errorMiddleware');
 
+// Resolve the React production build directory (client builds into ../server/dist)
+const clientBuildPath = path.join(__dirname, 'dist');
+
 // Validate critical security environment variables immediately on load
 if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
   console.error('CRITICAL SECURITY ERROR: ADMIN_EMAIL and ADMIN_PASSWORD must be configured in environment variables.');
@@ -84,6 +87,9 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
+// Serve React production static assets (CSS, JS, images, fonts, etc.)
+app.use(express.static(clientBuildPath));
+
 // Define API Route handlers
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/students', require('./routes/studentRoutes'));
@@ -95,9 +101,11 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date() });
 });
 
-// Root endpoint welcome check
-app.get('/', (req, res) => {
-  res.status(200).json({ message: 'B.R. International School Admin Portal API is running.' });
+// SPA catch-all: For any GET request that doesn't match an API route or static file,
+// serve the React index.html so client-side routing can handle the URL.
+// This prevents 404 errors when users reload the page on routes like /students, /fees, etc.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
 });
 
 // Centralized error handling middleware (must be registered last)
