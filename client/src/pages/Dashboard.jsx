@@ -5,6 +5,7 @@ import authService from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 import StatCard from '../components/common/StatCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import { 
   Users, 
   CalendarDays, 
@@ -23,24 +24,27 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadingSig, setUploadingSig] = useState(false);
+  const [confirmDeleteSig, setConfirmDeleteSig] = useState(false);
   const [dashboardClass, setDashboardClass] = useState('');
   const [dashboardSection, setDashboardSection] = useState('');
   const navigate = useNavigate();
   const { admin, updateSignature } = useAuth();
 
   useEffect(() => {
+    let cancelled = false;
     const fetchStats = async () => {
-      if (!stats) setLoading(true);
+      setLoading(true);
       try {
         const data = await feeService.getDashboardStats(dashboardClass, dashboardSection);
-        setStats(data);
+        if (!cancelled) setStats(data);
       } catch (err) {
-        toast.error('Failed to load dashboard metrics');
+        if (!cancelled) toast.error('Failed to load dashboard metrics');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchStats();
+    return () => { cancelled = true; };
   }, [dashboardClass, dashboardSection]);
 
   const handleSignatureUpload = async (e) => {
@@ -65,8 +69,11 @@ const Dashboard = () => {
   };
 
   const handleSignatureDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete the Principal's Signature?")) return;
+    setConfirmDeleteSig(true);
+  };
 
+  const confirmSignatureDelete = async () => {
+    setConfirmDeleteSig(false);
     setUploadingSig(true);
     const toastId = toast.loading('Removing Principal Signature...');
     try {
@@ -350,6 +357,16 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Confirm Signature Delete Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDeleteSig}
+        onClose={() => setConfirmDeleteSig(false)}
+        onConfirm={confirmSignatureDelete}
+        title="Delete Principal Signature"
+        message="Are you sure you want to delete the Principal's Signature? ID Cards will display a blank signature space."
+        confirmText="Delete Signature"
+      />
     </div>
   );
 };

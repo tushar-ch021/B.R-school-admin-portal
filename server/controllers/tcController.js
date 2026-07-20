@@ -2,6 +2,9 @@ const Student = require('../models/Student');
 const { generateTCNo } = require('../utils/serialNoGenerator');
 const asyncHandler = require('../utils/asyncHandler');
 
+// Escape special regex characters to prevent ReDoS attacks
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // @desc    Issue Transfer Certificate (TC) for a student
 // @route   POST /api/tc/issue/:studentId
 // @access  Private
@@ -45,7 +48,8 @@ const getTCRecords = asyncHandler(async (req, res) => {
   const query = { tcIssued: true };
 
   if (search) {
-    const searchRegex = new RegExp(search, 'i');
+    const safeSearch = escapeRegex(search);
+    const searchRegex = new RegExp(safeSearch, 'i');
     query.$or = [
       { firstName: searchRegex },
       { lastName: searchRegex },

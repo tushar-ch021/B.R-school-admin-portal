@@ -29,7 +29,7 @@ const App = () => {
               color: '#1b3a6b',
               fontSize: '13px',
               fontWeight: '500',
-              border: '1px border #e7f0fa',
+              border: '1px solid #e7f0fa',
               borderRadius: '8px',
               boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
             }

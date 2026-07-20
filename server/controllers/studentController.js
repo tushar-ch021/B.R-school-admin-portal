@@ -1,8 +1,12 @@
 const Student = require('../models/Student');
+const FeePayment = require('../models/FeePayment');
 const { uploadAndOptimize } = require('../utils/cloudinaryUpload');
 const { generateStudentSerial } = require('../utils/serialNoGenerator');
 const cloudinary = require('../config/cloudinary');
 const asyncHandler = require('../utils/asyncHandler');
+
+// Escape special regex characters to prevent ReDoS attacks
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // Helper to convert base64 image string to buffer
 const getBufferFromBase64 = (base64String) => {
@@ -171,7 +175,8 @@ const getStudents = asyncHandler(async (req, res) => {
 
   // Handle keyword search for name or serial number
   if (search) {
-    const searchRegex = new RegExp(search, 'i');
+    const safeSearch = escapeRegex(search);
+    const searchRegex = new RegExp(safeSearch, 'i');
     query.$or = [
       { firstName: searchRegex },
       { lastName: searchRegex },
@@ -259,12 +264,21 @@ const updateStudent = asyncHandler(async (req, res) => {
   // Extract payload fields
   let addressData = req.body.address;
   if (typeof addressData === 'string') {
-    addressData = JSON.parse(addressData);
+    try {
+      addressData = JSON.parse(addressData);
+    } catch (e) {
+      res.status(400);
+      throw new Error('Invalid address format');
+    }
   }
 
   let previousSchoolData = req.body.previousSchool;
   if (typeof previousSchoolData === 'string') {
-    previousSchoolData = JSON.parse(previousSchoolData);
+    try {
+      previousSchoolData = JSON.parse(previousSchoolData);
+    } catch (e) {
+      previousSchoolData = {};
+    }
   }
 
   let siblingsData = req.body.siblings;
@@ -348,8 +362,13 @@ const deleteStudent = asyncHandler(async (req, res) => {
     });
   }
 
+  // Cascade delete all associated fee payment records to prevent orphaned documents
+  await FeePayment.deleteMany({ student: student._id }).catch((err) => {
+    console.error('Failed to cascade delete fee payments for student:', err);
+  });
+
   await student.deleteOne();
-  res.status(200).json({ success: true, message: 'Student record and photo asset deleted successfully' });
+  res.status(200).json({ success: true, message: 'Student record, associated fee payments, and photo asset deleted successfully' });
 });
 
 // @desc    Soft-remove a student (mark as removed with reason)
@@ -388,7 +407,7 @@ const removeStudent = asyncHandler(async (req, res) => {
 // @route   GET /api/students/removed
 // @access  Private
 const getRemovedStudents = asyncHandler(async (req, res) => {
-  const { className, section, search } = req.query;
+  const { className, section, search, page = 1, limit = 50 } = req.query;
   const query = { isRemoved: true };
 
   if (className) {
@@ -399,7 +418,8 @@ const getRemovedStudents = asyncHandler(async (req, res) => {
   }
 
   if (search) {
-    const searchRegex = new RegExp(search, 'i');
+    const safeSearch = escapeRegex(search);
+    const searchRegex = new RegExp(safeSearch, 'i');
     query.$or = [
       { firstName: searchRegex },
       { lastName: searchRegex },
@@ -407,8 +427,22 @@ const getRemovedStudents = asyncHandler(async (req, res) => {
     ];
   }
 
-  const students = await Student.find(query).sort({ removedAt: -1 });
-  res.status(200).json(students);
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 50;
+  const skip = (pageNum - 1) * limitNum;
+
+  const totalCount = await Student.countDocuments(query);
+  const students = await Student.find(query)
+    .sort({ removedAt: -1 })
+    .skip(skip)
+    .limit(limitNum);
+
+  res.status(200).json({
+    students,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limitNum),
+    currentPage: pageNum
+  });
 });
 
 // @desc    Restore a removed student back to active

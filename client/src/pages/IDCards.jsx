@@ -27,7 +27,7 @@ const IDCards = () => {
           search,
           limit: 1000 // Get all matched students for ID cards view
         });
-        const studentList = data.students || data;
+        const studentList = Array.isArray(data.students) ? data.students : [];
         setStudents(studentList);
         
         // Auto-select first student if available and none selected

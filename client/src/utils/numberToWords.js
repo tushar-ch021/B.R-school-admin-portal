@@ -4,7 +4,9 @@
  * @returns {string} The words representation.
  */
 export const amountInWords = (num) => {
+  if (num === undefined || num === null || isNaN(num)) return 'Zero';
   if (num === 0) return 'Zero';
+  if (num < 0) return 'Minus ' + amountInWords(Math.abs(num));
   
   const ones = [
     '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
