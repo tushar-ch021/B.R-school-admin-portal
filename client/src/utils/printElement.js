@@ -52,11 +52,9 @@ export const printElement = (element, title = 'Print Document') => {
               print-color-adjust: exact !important;
             }
             .print-wrapper {
-              display: flex !important;
-              justify-content: center !important;
-              align-items: center !important;
+              display: block !important;
               width: 100% !important;
-              min-height: 95vh !important;
+              height: auto !important;
               box-sizing: border-box !important;
             }
             .identity-card-container {
