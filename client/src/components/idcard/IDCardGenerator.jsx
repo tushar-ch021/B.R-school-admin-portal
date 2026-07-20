@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { useReactToPrint } from 'react-to-print';
 import IDCardTemplate from './IDCardTemplate';
 import { downloadPDF } from '../../utils/generatePDF';
+import { printElement } from '../../utils/printElement';
 import { Printer, Download, CreditCard, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -9,11 +9,10 @@ const IDCardGenerator = ({ student }) => {
   const componentRef = useRef(null);
   const [exporting, setExporting] = useState(false);
 
-  // Hook react-to-print direct browser printing
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-    documentTitle: `ID_Card_${student?.serialNo || 'student'}`
-  });
+  // Direct browser printing
+  const handlePrint = () => {
+    printElement(componentRef.current, `ID_Card_${student?.serialNo || 'student'}`);
+  };
 
   // Call high-res scale 3 PDF downloader with page constraints = false (exact fit)
   const handleDownloadPDF = async () => {

@@ -41,7 +41,7 @@ const FeeReceiptTemplate = forwardRef(({ payment }, ref) => {
                 Atta, Gulaothi-Saidpur Road, Bulandshahr (BSR), Uttar Pradesh - 203412
               </p>
               <p className="text-[8px] text-gray-400 leading-tight">
-                Phone: 9536026897, 9410442828 | Email: contact@bris.edu.in | Website: www.bris.edu.in
+                Phone: 9536026897, 9410442828
               </p>
             </div>
           </div>

@@ -92,11 +92,18 @@ const admitStudent = asyncHandler(async (req, res) => {
     fatherQualification,
     motherQualification,
     officeAddress,
-    email
+    email,
+    tuitionFee,
+    transportFee
   } = req.body;
 
   // Generate atomic serial number
   const serialNo = await generateStudentSerial(academicYear);
+
+  const isTransport = usesTransport === 'true' || usesTransport === true;
+  const parsedTuition = tuitionFee !== undefined ? (Number(tuitionFee) || 0) : 12000;
+  const parsedTransport = transportFee !== undefined ? (Number(transportFee) || 0) : 1800;
+  const calculatedTotalFee = parsedTuition + (isTransport ? parsedTransport : 0);
 
   const student = await Student.create({
     serialNo,
@@ -137,8 +144,11 @@ const admitStudent = asyncHandler(async (req, res) => {
     contactNo,
     category: category || 'General',
     previousSchool: previousSchoolData || { name: '', tcNo: '' },
-    usesTransport: usesTransport === 'true' || usesTransport === true,
+    usesTransport: isTransport,
     transportRoute: transportRoute || '',
+    tuitionFee: parsedTuition,
+    transportFee: parsedTransport,
+    totalFee: calculatedTotalFee,
     isActive: true
   });
 
@@ -266,6 +276,13 @@ const updateStudent = asyncHandler(async (req, res) => {
     }
   }
 
+  const isTransport = req.body.usesTransport !== undefined
+    ? (req.body.usesTransport === 'true' || req.body.usesTransport === true)
+    : student.usesTransport;
+  const tuition = req.body.tuitionFee !== undefined ? (Number(req.body.tuitionFee) || 0) : (student.tuitionFee || 12000);
+  const transport = req.body.transportFee !== undefined ? (Number(req.body.transportFee) || 0) : (student.transportFee || 1800);
+  const total = tuition + (isTransport ? transport : 0);
+
   const fieldsToUpdate = {
     apaarId: req.body.apaarId !== undefined ? req.body.apaarId : student.apaarId,
     aadharNo: req.body.aadharNo !== undefined ? req.body.aadharNo : student.aadharNo,
@@ -296,8 +313,11 @@ const updateStudent = asyncHandler(async (req, res) => {
     contactNo: req.body.contactNo || student.contactNo,
     category: req.body.category || student.category,
     previousSchool: previousSchoolData || student.previousSchool,
-    usesTransport: req.body.usesTransport !== undefined ? (req.body.usesTransport === 'true' || req.body.usesTransport === true) : student.usesTransport,
+    usesTransport: isTransport,
     transportRoute: req.body.transportRoute !== undefined ? req.body.transportRoute : student.transportRoute,
+    tuitionFee: tuition,
+    transportFee: transport,
+    totalFee: total,
     photo: photoUpdate
   };
 

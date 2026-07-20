@@ -11,6 +11,16 @@ const feeService = {
     return response.data;
   },
 
+  getStudentFeeSummary: async (studentId) => {
+    const response = await api.get(`/fees/student/${studentId}/summary`);
+    return response.data;
+  },
+
+  updateStudentDues: async (studentId, duesData) => {
+    const response = await api.put(`/fees/student/${studentId}/update-dues`, duesData);
+    return response.data;
+  },
+
   getDashboardStats: async (className = '', section = '') => {
     const response = await api.get('/fees/dashboard-stats', {
       params: { className, section }

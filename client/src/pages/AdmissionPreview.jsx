@@ -4,7 +4,7 @@ import studentService from '../services/studentService';
 import StudentDetailsPrintable from '../components/students/StudentDetailsPrintable';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { downloadPDF } from '../utils/generatePDF';
-import { useReactToPrint } from 'react-to-print';
+import { printElement } from '../utils/printElement';
 import { CheckCircle, Printer, Download, UserPlus, FileText, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -30,10 +30,9 @@ const AdmissionPreview = () => {
     fetchStudent();
   }, [id, navigate]);
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Admission_Form_${student?.serialNo || 'student'}`
-  });
+  const handlePrint = () => {
+    printElement(printRef.current, `Admission_Form_${student?.serialNo || 'student'}`);
+  };
 
   const handleDownloadPDF = async () => {
     if (!student) return;

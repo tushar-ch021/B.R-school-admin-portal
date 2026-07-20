@@ -89,6 +89,101 @@ const getFeeHistoryByStudent = asyncHandler(async (req, res) => {
   res.status(200).json(payments);
 });
 
+// @desc    Update a student's assigned total fee / fee structure
+// @route   PUT /api/fees/student/:studentId/update-dues
+// @access  Private
+const updateStudentDues = asyncHandler(async (req, res) => {
+  const { studentId } = req.params;
+  const { tuitionFee, transportFee } = req.body;
+
+  const student = await Student.findById(studentId);
+  if (!student) {
+    res.status(404);
+    throw new Error('Student not found');
+  }
+
+  const parsedTuition = tuitionFee !== undefined ? Math.max(0, Number(tuitionFee) || 0) : (student.tuitionFee || 12000);
+  const parsedTransport = transportFee !== undefined ? Math.max(0, Number(transportFee) || 0) : (student.transportFee || 1800);
+
+  student.tuitionFee = parsedTuition;
+  student.transportFee = parsedTransport;
+  student.totalFee = parsedTuition + (student.usesTransport ? parsedTransport : 0);
+
+  await student.save();
+
+  // Compute total paid across all historical FeePayments
+  const payments = await FeePayment.find({ student: studentId });
+  const totalPaid = payments.reduce((sum, p) => sum + (Number(p.totalReceived) || 0), 0);
+  const remainingBalance = student.totalFee - totalPaid;
+
+  res.status(200).json({
+    success: true,
+    message: 'Student fee structure updated successfully',
+    student,
+    feeSummary: {
+      currentTotalFee: student.totalFee,
+      tuitionFee: student.tuitionFee,
+      transportFee: student.usesTransport ? student.transportFee : 0,
+      totalPaid,
+      remainingBalance
+    }
+  });
+});
+
+// @desc    Get single source of truth fee summary for a student
+// @route   GET /api/fees/student/:studentId/summary
+// @access  Private
+const getStudentFeeSummary = asyncHandler(async (req, res) => {
+  const { studentId } = req.params;
+
+  const student = await Student.findById(studentId);
+  if (!student) {
+    res.status(404);
+    throw new Error('Student not found');
+  }
+
+  const tuition = student.tuitionFee !== undefined ? student.tuitionFee : 12000;
+  const transport = student.transportFee !== undefined ? student.transportFee : 1800;
+  const currentTotalFee = tuition + (student.usesTransport ? transport : 0);
+
+  const payments = await FeePayment.find({ student: studentId });
+  
+  let paidTuition = 0;
+  let paidTransport = 0;
+  let totalPaid = 0;
+
+  payments.forEach((payment) => {
+    totalPaid += (Number(payment.totalReceived) || 0);
+    if (payment.feeItems && Array.isArray(payment.feeItems)) {
+      payment.feeItems.forEach((item) => {
+        if (item.particular === 'Tuition Fee') {
+          paidTuition += (Number(item.received) || 0);
+        } else if (item.particular === 'Transport Fee') {
+          paidTransport += (Number(item.received) || 0);
+        }
+      });
+    }
+  });
+
+  const remainingTuition = Math.max(0, tuition - paidTuition);
+  const remainingTransport = student.usesTransport ? Math.max(0, transport - paidTransport) : 0;
+  const remainingBalance = currentTotalFee - totalPaid;
+
+  res.status(200).json({
+    studentId: student._id,
+    currentTotalFee,
+    tuitionFee: tuition,
+    transportFee: student.usesTransport ? transport : 0,
+    paidTuition,
+    paidTransport,
+    totalPaid,
+    remainingTuition,
+    remainingTransport,
+    remainingBalance,
+    usesTransport: student.usesTransport
+  });
+});
+
 // @desc    Fetch dashboard statistics
 // @route   GET /api/fees/dashboard-stats
 // @access  Private
@@ -195,5 +290,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 module.exports = {
   collectFee,
   getFeeHistoryByStudent,
+  updateStudentDues,
+  getStudentFeeSummary,
   getDashboardStats
 };

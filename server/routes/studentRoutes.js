@@ -27,12 +27,12 @@ const parseMultipartJson = (req, res, next) => {
   if (req.body.previousSchool && typeof req.body.previousSchool === 'string') {
     try {
       req.body.previousSchool = JSON.parse(req.body.previousSchool);
-    } catch (e) {}
+    } catch (e) { }
   }
   if (req.body.siblings && typeof req.body.siblings === 'string') {
     try {
       req.body.siblings = JSON.parse(req.body.siblings);
-    } catch (e) {}
+    } catch (e) { }
   }
   next();
 };
@@ -50,13 +50,13 @@ const studentValidationRules = [
   body('fatherPhone').notEmpty().withMessage('Father phone is required').trim(),
   body('motherName').notEmpty().withMessage('Mother name is required').trim(),
   body('contactNo').notEmpty().withMessage('Contact number is required').trim(),
-  
+
   // Optional field validators
   body('apaarId')
     .optional({ checkFalsy: true })
     .isLength({ min: 12, max: 12 }).withMessage('APAAR ID must be exactly 12 digits')
     .isNumeric().withMessage('APAAR ID must contain numbers only'),
-    
+
   body('address.current').notEmpty().withMessage('Current address is required').trim(),
   body('address.city').notEmpty().withMessage('City is required').trim(),
   body('address.state').notEmpty().withMessage('State is required').trim(),

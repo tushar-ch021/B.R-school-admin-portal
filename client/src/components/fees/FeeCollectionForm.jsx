@@ -36,29 +36,19 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
     setPaymentModeState(watchedPaymentMode);
   }, [watchedPaymentMode]);
 
-  // Load student fee history and dynamically compute remaining dues
+  const [feeSummary, setFeeSummary] = useState(null);
+
+  // Load student fee summary and dynamically compute remaining dues (Single Source of Truth)
   useEffect(() => {
-    const loadDuesHistory = async () => {
+    const loadDuesSummary = async () => {
       if (!student?._id) return;
       
       try {
-        const history = await feeService.getFeeHistory(student._id);
+        const summary = await feeService.getStudentFeeSummary(student._id);
+        setFeeSummary(summary);
         
-        let paidTuition = 0;
-        let paidTransport = 0;
-        
-        history.forEach((payment) => {
-          payment.feeItems.forEach((item) => {
-            if (item.particular === 'Tuition Fee') {
-              paidTuition += item.received;
-            } else if (item.particular === 'Transport Fee') {
-              paidTransport += item.received;
-            }
-          });
-        });
-        
-        const remainingTuition = Math.max(0, 12000 - paidTuition);
-        const remainingTransport = Math.max(0, 1800 - paidTransport);
+        const remainingTuition = summary.remainingTuition;
+        const remainingTransport = summary.remainingTransport;
         
         const items = [
           { 
@@ -69,7 +59,7 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
           }
         ];
         
-        if (student.usesTransport) {
+        if (summary.usesTransport) {
           items.push({ 
             particular: 'Transport Fee', 
             dueDate: new Date().toISOString().split('T')[0], 
@@ -80,19 +70,20 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
         
         setFeeItems(items);
       } catch (err) {
-        console.error('Failed to load student fee history:', err);
-        // Fallback in case of API failure
+        console.error('Failed to load student fee summary:', err);
+        const fallbackTuition = student.tuitionFee !== undefined ? student.tuitionFee : 12000;
+        const fallbackTransport = student.transportFee !== undefined ? student.transportFee : 1800;
         const fallback = [
-          { particular: 'Tuition Fee', dueDate: new Date().toISOString().split('T')[0], dues: 12000, received: 12000 }
+          { particular: 'Tuition Fee', dueDate: new Date().toISOString().split('T')[0], dues: fallbackTuition, received: fallbackTuition }
         ];
         if (student.usesTransport) {
-          fallback.push({ particular: 'Transport Fee', dueDate: new Date().toISOString().split('T')[0], dues: 1800, received: 1800 });
+          fallback.push({ particular: 'Transport Fee', dueDate: new Date().toISOString().split('T')[0], dues: fallbackTransport, received: fallbackTransport });
         }
         setFeeItems(fallback);
       }
     };
     
-    loadDuesHistory();
+    loadDuesSummary();
   }, [student]);
 
   const handleItemChange = (index, field, value) => {
@@ -173,21 +164,33 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6 no-print">
       {/* 1. Header Metadata summary */}
-      <div className="rounded-lg bg-gray-50 p-4 border border-gray-150 flex flex-wrap justify-between items-center gap-4">
+      <div className="rounded-lg bg-navy-50 p-4 border border-navy-100 flex flex-wrap justify-between items-center gap-4">
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase">Student Invoice Target</p>
           <h4 className="text-base font-extrabold text-navy-900">
             {student?.firstName} {student?.lastName} ({student?.serialNo})
           </h4>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 font-medium">
             Class {student?.class} - Section {student?.section} | Roll No: {student?.rollNo}
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <div className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-center shadow-xs">
-            <span className="block text-[10px] text-gray-400 font-bold uppercase">Academic Year</span>
-            <span className="text-sm font-extrabold text-navy-900">{student?.academicYear}</span>
+        <div className="flex flex-wrap gap-2">
+          <div className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-center shadow-xs">
+            <span className="block text-[9px] text-gray-400 font-bold uppercase">Current Total Fee</span>
+            <span className="text-sm font-black text-navy-900">₹{(feeSummary?.currentTotalFee || student?.totalFee || 12000).toFixed(2)}</span>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-center shadow-xs">
+            <span className="block text-[9px] text-gray-400 font-bold uppercase">Total Paid</span>
+            <span className="text-sm font-black text-schoolGreen-800">₹{(feeSummary?.totalPaid || 0).toFixed(2)}</span>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-center shadow-xs">
+            <span className="block text-[9px] text-gray-400 font-bold uppercase">Remaining Dues</span>
+            <span className="text-sm font-black text-red-650" style={{ color: '#c62828' }}>
+              ₹{(feeSummary?.remainingBalance !== undefined ? feeSummary.remainingBalance : (student?.totalFee || 12000)).toFixed(2)}
+            </span>
           </div>
         </div>
       </div>

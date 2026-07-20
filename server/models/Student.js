@@ -197,6 +197,22 @@ const studentSchema = new mongoose.Schema(
       trim: true,
       default: ''
     },
+    // Assigned Fee Structure (Single Source of Truth)
+    tuitionFee: {
+      type: Number,
+      default: 12000,
+      min: [0, 'Tuition fee cannot be negative']
+    },
+    transportFee: {
+      type: Number,
+      default: 1800,
+      min: [0, 'Transport fee cannot be negative']
+    },
+    totalFee: {
+      type: Number,
+      default: 12000,
+      min: [0, 'Total fee cannot be negative']
+    },
     // Transfer Certificate Details
     tcIssued: {
       type: Boolean,
@@ -246,6 +262,14 @@ const studentSchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
+// Pre-save hook to ensure totalFee is computed atomically
+studentSchema.pre('save', function (next) {
+  const tuition = Number(this.tuitionFee) || 0;
+  const transport = this.usesTransport ? (Number(this.transportFee) || 0) : 0;
+  this.totalFee = tuition + transport;
+  next();
+});
 
 // Compound index to optimize queries that filter by status, class, and section
 studentSchema.index({ isActive: 1, isRemoved: 1, class: 1, section: 1 });

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { useReactToPrint } from 'react-to-print';
 import TCTemplate from './TCTemplate';
 import { downloadPDF } from '../../utils/generatePDF';
+import { printElement } from '../../utils/printElement';
 import studentService from '../../services/studentService';
 import { Printer, Download, FileCheck, ArrowRight, ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -18,11 +18,10 @@ const TCGenerator = ({ student, onSuccess }) => {
 
   const printRef = useRef(null);
 
-  // Hook react-to-print browser printing
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `TC_${issuedStudentData?.serialNo || 'student'}`
-  });
+  // Browser printing
+  const handlePrint = () => {
+    printElement(printRef.current, `TC_${issuedStudentData?.serialNo || 'student'}`);
+  };
 
   // Call high-res scale 3 PDF downloader with standard A4 page layout
   const handleDownloadPDF = async () => {

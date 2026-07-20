@@ -1,7 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const { collectFee, getFeeHistoryByStudent, getDashboardStats } = require('../controllers/feeController');
+const { 
+  collectFee, 
+  getFeeHistoryByStudent, 
+  updateStudentDues, 
+  getStudentFeeSummary, 
+  getDashboardStats 
+} = require('../controllers/feeController');
 const { protect } = require('../middleware/authMiddleware');
 const { validateFields } = require('../middleware/validationMiddleware');
 
@@ -20,6 +26,12 @@ router.post('/collect', protect, collectFeeValidationRules, validateFields, coll
 
 // Student ledger logs
 router.get('/student/:studentId', protect, getFeeHistoryByStudent);
+
+// Student single source of truth fee summary
+router.get('/student/:studentId/summary', protect, getStudentFeeSummary);
+
+// Update student total fee / dues structure
+router.put('/student/:studentId/update-dues', protect, updateStudentDues);
 
 // Dashboard aggregate statistics (Total Students, Transport, Monthly Collected)
 router.get('/dashboard-stats', protect, getDashboardStats);

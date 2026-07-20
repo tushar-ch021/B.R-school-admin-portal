@@ -30,17 +30,17 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 no-print">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity" 
+        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity no-print" 
         onClick={onClose}
       />
 
       {/* Content wrapper */}
       <div className={`relative w-full transform rounded-lg bg-white shadow-xl transition-all duration-300 ${sizeClasses[size]} overflow-hidden`}>
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-gray-150 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-gray-150 px-6 py-4 no-print">
           <h3 className="text-base font-bold text-navy-900 md:text-lg">
             {title}
           </h3>

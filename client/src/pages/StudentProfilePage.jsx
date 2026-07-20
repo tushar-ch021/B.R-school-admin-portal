@@ -8,12 +8,13 @@ import FeeHistoryTable from '../components/fees/FeeHistoryTable';
 import Modal from '../components/common/Modal';
 import FeeCollectionForm from '../components/fees/FeeCollectionForm';
 import FeeReceiptTemplate from '../components/fees/FeeReceiptTemplate';
+import UpdateDuesModal from '../components/fees/UpdateDuesModal';
 import TCGenerator from '../components/tc/TCGenerator';
 import IDCardGenerator from '../components/idcard/IDCardGenerator';
 import StudentDetailsPrintable from '../components/students/StudentDetailsPrintable';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { downloadPDF } from '../utils/generatePDF';
-import { useReactToPrint } from 'react-to-print';
+import { printElement } from '../utils/printElement';
 import { ChevronLeft, Edit2, FileText, Printer, Download, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -31,6 +32,7 @@ const StudentProfilePage = () => {
 
   // Modal display toggles
   const [collectFeeOpen, setCollectFeeOpen] = useState(false);
+  const [updateDuesOpen, setUpdateDuesOpen] = useState(false);
   const [issueTCOpen, setIssueTCOpen] = useState(false);
   const [idCardOpen, setIdCardOpen] = useState(false);
   const [detailsPrintOpen, setDetailsPrintOpen] = useState(false);
@@ -45,10 +47,9 @@ const StudentProfilePage = () => {
   const detailsPrintRef = useRef(null);
 
   // Reprint Receipt browser printing
-  const handleInvoicePrint = useReactToPrint({
-    content: () => invoicePrintRef.current,
-    documentTitle: `Receipt_${reprintPayment?.receiptNo || 'payment'}`
-  });
+  const handleInvoicePrint = () => {
+    printElement(invoicePrintRef.current, `Receipt_${reprintPayment?.receiptNo || 'payment'}`);
+  };
 
   const handleInvoiceDownload = async () => {
     if (!reprintPayment || exporting) return;
@@ -66,10 +67,9 @@ const StudentProfilePage = () => {
   };
 
   // Full Details Form browser printing
-  const handleDetailsFormPrint = useReactToPrint({
-    content: () => detailsPrintRef.current,
-    documentTitle: `Admission_Form_${student?.serialNo || 'student'}`
-  });
+  const handleDetailsFormPrint = () => {
+    printElement(detailsPrintRef.current, `Admission_Form_${student?.serialNo || 'student'}`);
+  };
 
   const handleDetailsFormDownload = async () => {
     if (!student || exporting) return;
@@ -238,6 +238,7 @@ const StudentProfilePage = () => {
           <StudentProfile
             student={student}
             onCollectFee={() => setCollectFeeOpen(true)}
+            onUpdateDues={() => setUpdateDuesOpen(true)}
             onIssueTC={() => setIssueTCOpen(true)}
             onGenerateID={() => setIdCardOpen(true)}
             onPrintDetails={() => setDetailsPrintOpen(true)}
@@ -260,6 +261,18 @@ const StudentProfilePage = () => {
       )}
 
       {/* --- POPUP MODALS INDEX --- */}
+
+      {/* Update Dues Modal */}
+      {student && (
+        <UpdateDuesModal
+          student={student}
+          isOpen={updateDuesOpen}
+          onClose={() => setUpdateDuesOpen(false)}
+          onSuccess={(updatedStudent) => {
+            setStudent(updatedStudent);
+          }}
+        />
+      )}
 
       {/* 1. Collect Fee Form Modal */}
       <Modal 

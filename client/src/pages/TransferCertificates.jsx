@@ -5,7 +5,7 @@ import DataTable from '../components/common/DataTable';
 import Modal from '../components/common/Modal';
 import TCTemplate from '../components/tc/TCTemplate';
 import { downloadPDF } from '../utils/generatePDF';
-import { useReactToPrint } from 'react-to-print';
+import { printElement } from '../utils/printElement';
 import { FileBadge, Printer, Download, Search, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -23,11 +23,10 @@ const TransferCertificates = () => {
   const printRef = useRef(null);
   const navigate = useNavigate();
 
-  // Hook react-to-print browser printing
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `TC_${selectedRecord?.serialNo || 'student'}`
-  });
+  // Browser printing
+  const handlePrint = () => {
+    printElement(printRef.current, `TC_${selectedRecord?.serialNo || 'student'}`);
+  };
 
   const handleDownloadPDF = async () => {
     if (!selectedRecord || exporting) return;

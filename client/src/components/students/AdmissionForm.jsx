@@ -235,11 +235,11 @@ const AdmissionForm = ({ onSubmit, initialData = null, isSubmitting = false }) =
                 {errors.category && <span className="text-xs text-red-500">{errors.category.message}</span>}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700">Contact Number *</label>
+                <label className="block text-xs font-semibold text-gray-700">Student Contact Number (Optional)</label>
                 <input
                   type="text"
                   maxLength={10}
-                  placeholder="10-digit mobile number"
+                  placeholder="10-digit student mobile number"
                   {...register('contactNo')}
                   className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-navy-900 focus:ring-1 focus:ring-navy-900"
                 />

@@ -8,9 +8,10 @@ import Modal from '../components/common/Modal';
 import FeeCollectionForm from '../components/fees/FeeCollectionForm';
 import FeeHistoryTable from '../components/fees/FeeHistoryTable';
 import FeeReceiptTemplate from '../components/fees/FeeReceiptTemplate';
+import UpdateDuesModal from '../components/fees/UpdateDuesModal';
 import { downloadPDF } from '../utils/generatePDF';
-import { useReactToPrint } from 'react-to-print';
-import { IndianRupee, Printer, Download, CreditCard, Receipt } from 'lucide-react';
+import { printElement } from '../utils/printElement';
+import { IndianRupee, Printer, Download, CreditCard, Receipt, Calculator } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const FeeManagement = () => {
@@ -27,6 +28,9 @@ const FeeManagement = () => {
   const [targetStudent, setTargetStudent] = useState(null);
   const [collectOpen, setCollectOpen] = useState(false);
   
+  const [updateDuesStudent, setUpdateDuesStudent] = useState(null);
+  const [updateDuesOpen, setUpdateDuesOpen] = useState(false);
+
   const [historyStudent, setHistoryStudent] = useState(null);
   const [historyPayments, setHistoryPayments] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -37,11 +41,10 @@ const FeeManagement = () => {
 
   const receiptRef = useRef(null);
 
-  // Hook react-to-print browser printing
-  const handleReceiptPrint = useReactToPrint({
-    content: () => receiptRef.current,
-    documentTitle: `Receipt_${activeReceipt?.receiptNo || 'payment'}`
-  });
+  // Browser printing handler
+  const handleReceiptPrint = () => {
+    printElement(receiptRef.current, `Receipt_${activeReceipt?.receiptNo || 'payment'}`);
+  };
 
   const handleReceiptDownload = async () => {
     if (!activeReceipt) return;
@@ -55,30 +58,35 @@ const FeeManagement = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      setLoading(true);
-      try {
-        const data = await studentService.getStudents({
-          className: selectedClass,
-          section: selectedSection,
-          search,
-          limit: 1000 // Get all matched students for fee management selector list
-        });
-        setStudents(data.students || data);
-      } catch (err) {
-        toast.error('Failed to retrieve students database directories');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const data = await studentService.getStudents({
+        className: selectedClass,
+        section: selectedSection,
+        search,
+        limit: 1000 // Get all matched students for fee management selector list
+      });
+      setStudents(data.students || data);
+    } catch (err) {
+      toast.error('Failed to retrieve students database directories');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchStudents();
   }, [selectedClass, selectedSection, search]);
 
   const handleCollectTrigger = (student) => {
     setTargetStudent(student);
     setCollectOpen(true);
+  };
+
+  const handleUpdateDuesTrigger = (student) => {
+    setUpdateDuesStudent(student);
+    setUpdateDuesOpen(true);
   };
 
   const handleHistoryTrigger = async (student) => {
@@ -107,6 +115,7 @@ const FeeManagement = () => {
       // Immediately open receipt reprint overlay
       setActiveReceipt(savedReceipt);
       setReceiptOpen(true);
+      fetchStudents();
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Failed to submit fee payment details';
       toast.error(errMsg, { id: toastId });
@@ -143,22 +152,18 @@ const FeeManagement = () => {
       render: (s) => <span>{s.class} - {s.section}</span>
     },
     {
-      header: 'Uses Bus Route',
-      key: 'usesTransport',
+      header: 'Assigned Fee',
+      key: 'totalFee',
       render: (s) => (
-        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
-          s.usesTransport 
-            ? 'bg-schoolGreen-50 text-schoolGreen-800 border border-schoolGreen-100' 
-            : 'bg-gray-100 text-gray-500 border border-gray-200'
-        }`}>
-          {s.usesTransport ? 'Yes (Bus)' : 'No (Self)'}
+        <span className="font-bold text-navy-900">
+          ₹{(s.totalFee !== undefined ? s.totalFee : 12000).toFixed(2)}
         </span>
       )
     },
     {
       header: 'Billing Actions',
       key: 'actions',
-      style: { width: '220px' },
+      style: { width: '310px' },
       render: (s) => (
         <div className="flex items-center gap-2 no-print" onClick={(e) => e.stopPropagation()}>
           <button
@@ -170,8 +175,17 @@ const FeeManagement = () => {
           </button>
           
           <button
+            onClick={() => handleUpdateDuesTrigger(s)}
+            className="flex items-center gap-1 rounded-lg border border-amber-600 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition-colors"
+            title="Update total assigned fee for this student"
+          >
+            <Calculator className="h-3.5 w-3.5 text-amber-700" />
+            Update Dues
+          </button>
+
+          <button
             onClick={() => handleHistoryTrigger(s)}
-            className="flex items-center gap-1 rounded-lg border border-navy-900 bg-white px-3 py-1.5 text-xs font-bold text-navy-900 hover:bg-navy-50 transition-colors"
+            className="flex items-center gap-1 rounded-lg border border-navy-900 bg-white px-2.5 py-1.5 text-xs font-bold text-navy-900 hover:bg-navy-50 transition-colors"
           >
             <Receipt className="h-3.5 w-3.5" />
             History
@@ -188,7 +202,7 @@ const FeeManagement = () => {
       <div className="no-print">
         <h2 className="text-xl font-extrabold text-navy-900 md:text-2xl">Fee Management</h2>
         <p className="text-xs text-gray-500 font-medium">
-          Select class-section directories to issue fee receipts, record Tuition and Transport collections, and reprint transaction ledger histories.
+          Select class-section directories to issue fee receipts, record Tuition and Transport collections, update assigned fee structures, and reprint transaction ledger histories.
         </p>
       </div>
 
@@ -235,6 +249,18 @@ const FeeManagement = () => {
           />
         )}
       </Modal>
+
+      {/* Modal 2: Update Dues Modal */}
+      {updateDuesStudent && (
+        <UpdateDuesModal
+          student={updateDuesStudent}
+          isOpen={updateDuesOpen}
+          onClose={() => setUpdateDuesOpen(false)}
+          onSuccess={() => {
+            fetchStudents();
+          }}
+        />
+      )}
 
       {/* Modal 2: Fee History Table */}
       <Modal

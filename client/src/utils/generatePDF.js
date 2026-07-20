@@ -62,10 +62,19 @@ export const downloadPDF = async (element, filename = 'document.pdf', options = 
     // 1. Wait for all image assets to be fully loaded and decoded before capture
     await waitForImages(element);
 
-    // 2. Determine target virtual viewport width to prevent responsive layout wrapping/clipping
+    // 2. Wait for web fonts to be completely ready so text metrics are computed accurately
+    if (document.fonts && document.fonts.ready) {
+      try {
+        await document.fonts.ready;
+      } catch (fontErr) {
+        console.warn('Font loading wait warning:', fontErr);
+      }
+    }
+
+    // 3. Determine target virtual viewport width
     const targetWidth = captureWidth || (useA4 ? 800 : 324);
     
-    // 3. Generate canvas with specified options
+    // 4. Generate canvas with optimized options for precise layout rendering
     const canvas = await html2canvas(element, {
       scale: 2, // High resolution scale 2
       useCORS: true, // Handle cross-origin assets
@@ -74,13 +83,51 @@ export const downloadPDF = async (element, filename = 'document.pdf', options = 
       backgroundColor: '#ffffff',
       scrollX: 0,
       scrollY: 0,
-      windowWidth: targetWidth + 100, // Buffer to prevent horizontal scroll bars clipping
+      windowWidth: targetWidth + 100,
       onclone: (clonedDoc) => {
-        // Copy stylesheets for non-ID-card elements (e.g. admission forms)
+        // Copy all parent stylesheets into cloned document
         const parentStylesheets = Array.from(document.head.querySelectorAll('link[rel="stylesheet"], style'));
         parentStylesheets.forEach((styleNode) => {
           clonedDoc.head.appendChild(styleNode.cloneNode(true));
         });
+
+        // Inject font baseline & line-height normalization to fix html2canvas text vertical alignment bug
+        const fixStyles = clonedDoc.createElement('style');
+        fixStyles.innerHTML = `
+          *, *::before, *::after {
+            box-sizing: border-box !important;
+          }
+          .print-container,
+          .print-container * {
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+          }
+          /* Ensure line-height is explicitly bounded so html2canvas doesn't drop text to box bottom */
+          .print-container h1,
+          .print-container h2,
+          .print-container h3,
+          .print-container h4,
+          .print-container p,
+          .print-container span,
+          .print-container td,
+          .print-container th {
+            line-height: 1.25 !important;
+          }
+          /* Guarantee bottom padding on the identity card blue banner strip in PDF exports */
+          .identity-strip {
+            padding-bottom: 6px !important;
+            padding-top: 2px !important;
+            height: 27px !important;
+            min-height: 27px !important;
+            box-sizing: border-box !important;
+          }
+          .identity-strip span {
+            padding-bottom: 3px !important;
+            line-height: 1 !important;
+            display: inline-block !important;
+          }
+        `;
+        clonedDoc.head.appendChild(fixStyles);
 
         const container = clonedDoc.querySelector('.print-container') || clonedDoc.getElementById(element.id);
         if (container) {
@@ -88,12 +135,7 @@ export const downloadPDF = async (element, filename = 'document.pdf', options = 
           container.style.minWidth = `${targetWidth}px`;
           container.style.maxWidth = `${targetWidth}px`;
           container.style.transform = 'none';
-          // Force the body section to block layout to prevent flex stretching in html2canvas
-          const bodySection = container.children[2]; // The photo/details section (3rd child)
-          if (bodySection) {
-            bodySection.style.display = 'block';
-            bodySection.style.flex = 'none';
-          }
+          container.style.margin = '0 auto';
         }
       }
     });

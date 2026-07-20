@@ -11,17 +11,17 @@ export const admissionSchema = z.object({
   dob: z.string().min(1, 'Date of birth is required'),
   gender: z.enum(['Male', 'Female', 'Other'], { errorMap: () => ({ message: 'Please select a gender' }) }),
   bloodGroup: z.string().optional(),
-  
+
   class: z.string().min(1, 'Class is required').trim(),
   section: z.string().min(1, 'Section is required').max(5, 'Section is too long').toUpperCase().trim(),
   rollNo: z.string().min(1, 'Roll number is required').trim(),
   academicYear: z.string().regex(/^\d{4}-\d{4}$/, 'Academic year must be in format YYYY-YYYY').trim(),
   admissionDate: z.string().min(1, 'Admission date is required'),
-  
+
   fatherName: z.string().min(2, 'Father name must be at least 2 characters').trim(),
   fatherOccupation: z.string().optional(),
   fatherPhone: z.string().regex(phoneRegex, 'Enter a valid 10-digit mobile number'),
-  
+
   motherName: z.string().min(2, 'Mother name must be at least 2 characters').trim(),
   motherOccupation: z.string().optional(),
   motherPhone: z.string()
@@ -29,27 +29,31 @@ export const admissionSchema = z.object({
     .refine((val) => !val || phoneRegex.test(val), {
       message: 'Enter a valid 10-digit mobile number'
     }),
-  
+
   guardianName: z.string().optional(),
-  
+
   address: z.object({
     current: z.string().min(5, 'Current address must be at least 5 characters').trim(),
     city: z.string().min(2, 'City is required').trim(),
     state: z.string().min(2, 'State is required').trim(),
     pincode: z.string().regex(pincodeRegex, 'Enter a valid 6-digit PIN code')
   }),
-  
-  contactNo: z.string().regex(phoneRegex, 'Enter a valid 10-digit contact number'),
+
+  contactNo: z.string()
+    .optional()
+    .refine((val) => !val || phoneRegex.test(val), {
+      message: 'Enter a valid 10-digit contact number'
+    }),
   category: z.enum(['General', 'OBC', 'SC', 'ST', 'EWS'], { errorMap: () => ({ message: 'Please select a category' }) }),
-  
+
   previousSchool: z.object({
     name: z.string().optional(),
     tcNo: z.string().optional()
   }).optional(),
-  
+
   usesTransport: z.boolean().default(false),
   transportRoute: z.string().optional(),
-  
+
   apaarId: z.string()
     .optional()
     .refine((val) => !val || apaarRegex.test(val), {
