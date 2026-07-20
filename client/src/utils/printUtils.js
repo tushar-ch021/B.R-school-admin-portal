@@ -1,13 +1,12 @@
 /**
- * Returns standard printing configuration parameters for react-to-print.
+ * Returns standard printing configuration parameters for browser-based printing.
  * Injects custom page titles and guarantees font asset layouts are preserved.
  * @param {string} title Document title shown in the print dialog.
- * @returns {Object} Config object for react-to-print.
+ * @returns {Object} Config object with page style string.
  */
 export const getPrintConfig = (title = 'Document') => {
   return {
     documentTitle: title,
-    removeAfterPrint: true,
     pageStyle: `
       @media print {
         body {

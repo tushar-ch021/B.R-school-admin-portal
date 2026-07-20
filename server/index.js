@@ -43,6 +43,9 @@ connectDB().then(() => {
     .catch((err) => {
       console.error('Failed to query or seed Administrator data:', err);
     });
+}).catch((err) => {
+  console.error('Failed to connect to MongoDB database:', err);
+  process.exit(1);
 });
 
 // Configure Security Middleware with customized Content Security Policy (CSP)

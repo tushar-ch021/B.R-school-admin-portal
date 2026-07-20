@@ -27,7 +27,8 @@ const RemovedStudents = () => {
         section: selectedSection,
         search
       });
-      setStudents(data);
+      // Support both paginated response and legacy array response
+      setStudents(Array.isArray(data) ? data : (data.students || []));
     } catch (err) {
       toast.error('Failed to load removed students');
     } finally {

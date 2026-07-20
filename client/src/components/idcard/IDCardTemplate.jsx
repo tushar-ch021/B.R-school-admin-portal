@@ -61,7 +61,6 @@ const IDCardTemplate = forwardRef(({ student }, ref) => {
               src="/logo.png" 
               alt="BRIS Logo" 
               style={{ height: '100%', width: '100%', objectFit: 'contain', display: 'block' }}
-              crossOrigin="anonymous"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}

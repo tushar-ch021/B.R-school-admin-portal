@@ -250,7 +250,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
           as: 'studentInfo'
         }
       },
-      { $unwind: '$studentInfo' },
+      // Use preserveNullAndEmptyArrays so payments from deleted students aren't silently discarded
+      { $unwind: { path: '$studentInfo', preserveNullAndEmptyArrays: true } },
       { $match: matchCriteria }
     );
   }

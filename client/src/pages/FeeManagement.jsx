@@ -50,7 +50,8 @@ const FeeManagement = () => {
     if (!activeReceipt) return;
     const toastId = toast.loading('Compiling fee receipt PDF...');
     try {
-      const filename = `Fee_Receipt_${targetStudent?.firstName || 'student'}_${activeReceipt.receiptNo}.pdf`;
+      const receiptStudent = activeReceipt.student || targetStudent;
+      const filename = `Fee_Receipt_${receiptStudent?.firstName || 'student'}_${activeReceipt.receiptNo}.pdf`;
       await downloadPDF(receiptRef.current, filename, { useA4: true });
       toast.success('Fee receipt PDF downloaded', { id: toastId });
     } catch (err) {
@@ -67,7 +68,7 @@ const FeeManagement = () => {
         search,
         limit: 1000 // Get all matched students for fee management selector list
       });
-      setStudents(data.students || data);
+      setStudents(Array.isArray(data.students) ? data.students : []);
     } catch (err) {
       toast.error('Failed to retrieve students database directories');
     } finally {

@@ -14,8 +14,8 @@ const Students = () => {
   
   // Query Filters state
   const [search, setSearch] = useState('');
-  const [selectedClass, setSelectedClass] = useState('10th'); // Defaults to a class filter view
-  const [selectedSection, setSelectedSection] = useState('A'); // Defaults to section A
+  const [selectedClass, setSelectedClass] = useState(''); // Defaults to all classes
+  const [selectedSection, setSelectedSection] = useState(''); // Defaults to all sections
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);

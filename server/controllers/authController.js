@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
 const asyncHandler = require('../utils/asyncHandler');
+const cloudinary = require('../config/cloudinary');
 
 /**
  * Generates JWT token for the authenticated admin
@@ -33,6 +34,7 @@ const loginAdmin = asyncHandler(async (req, res) => {
       _id: admin._id,
       name: admin.name,
       email: admin.email,
+      signatureUrl: admin.signatureUrl || '',
       token: generateToken(admin._id)
     });
   } else {
@@ -94,6 +96,26 @@ const deleteSignature = asyncHandler(async (req, res) => {
   if (!admin) {
     res.status(404);
     throw new Error('Admin not found');
+  }
+
+  // Clean up the old signature image from Cloudinary to prevent orphaned assets
+  if (admin.signatureUrl) {
+    try {
+      const parts = admin.signatureUrl.split('/upload/');
+      if (parts.length === 2) {
+        // Extract public_id by removing file extension from the path segment
+        const pathParts = parts[1].split('/');
+        // Remove version prefix (v1234567890) if present
+        const startIndex = pathParts[0].match(/^v\d+$/) ? 1 : 0;
+        const publicIdWithExt = pathParts.slice(startIndex).join('/');
+        const publicId = publicIdWithExt.replace(/\.[^.]+$/, '');
+        if (publicId) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+    } catch (cleanupErr) {
+      console.error('Failed to clean up old signature from Cloudinary:', cleanupErr);
+    }
   }
 
   admin.signatureUrl = '';

@@ -264,6 +264,8 @@ const studentSchema = new mongoose.Schema(
 );
 
 // Pre-save hook to ensure totalFee is computed atomically
+// NOTE: This hook only fires on .save() calls, NOT on findByIdAndUpdate.
+// When using findByIdAndUpdate, you must manually compute and set totalFee.
 studentSchema.pre('save', function (next) {
   const tuition = Number(this.tuitionFee) || 0;
   const transport = this.usesTransport ? (Number(this.transportFee) || 0) : 0;

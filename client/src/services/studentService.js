@@ -64,11 +64,13 @@ const studentService = {
   },
 
   getRemovedStudents: async (filters = {}) => {
-    const { className, section, search } = filters;
+    const { className, section, search, page, limit } = filters;
     const params = {};
     if (className) params.className = className;
     if (section) params.section = section;
     if (search) params.search = search;
+    if (page) params.page = page;
+    if (limit) params.limit = limit;
 
     const response = await api.get('/students/removed', { params });
     return response.data;
