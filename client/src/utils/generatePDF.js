@@ -102,16 +102,15 @@ export const downloadPDF = async (element, filename = 'document.pdf', options = 
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
           }
-          /* Ensure line-height is explicitly bounded so html2canvas doesn't drop text to box bottom */
-          .print-container h1,
-          .print-container h2,
-          .print-container h3,
-          .print-container h4,
-          .print-container p,
-          .print-container span,
+          /* Preserve each template's authored line-height. A forced line-height
+             changes row dimensions and leaves visible space below document text. */
           .print-container td,
           .print-container th {
-            line-height: 1.25 !important;
+            vertical-align: middle !important;
+          }
+          .print-container p {
+            margin-top: 0;
+            margin-bottom: 0;
           }
           /* Guarantee bottom padding on the identity card blue banner strip in PDF exports */
           .identity-strip {

@@ -176,7 +176,7 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
         <div className="flex flex-wrap gap-2">
           <div className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-center shadow-xs">
             <span className="block text-[9px] text-gray-400 font-bold uppercase">Current Total Fee</span>
-            <span className="text-sm font-black text-navy-900">₹{(feeSummary?.currentTotalFee || student?.totalFee || 12000).toFixed(2)}</span>
+            <span className="text-sm font-black text-navy-900">₹{(feeSummary?.currentTotalFee ?? student?.totalFee ?? 0).toFixed(2)}</span>
           </div>
 
           <div className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-center shadow-xs">
@@ -187,7 +187,7 @@ const FeeCollectionForm = ({ student, onSubmit, isSubmitting = false }) => {
           <div className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-center shadow-xs">
             <span className="block text-[9px] text-gray-400 font-bold uppercase">Remaining Dues</span>
             <span className="text-sm font-black text-red-650" style={{ color: '#c62828' }}>
-              ₹{(feeSummary?.remainingBalance !== undefined ? feeSummary.remainingBalance : (student?.totalFee || 12000)).toFixed(2)}
+              ₹{(feeSummary?.remainingBalance !== undefined ? feeSummary.remainingBalance : (student?.totalFee ?? 0)).toFixed(2)}
             </span>
           </div>
         </div>

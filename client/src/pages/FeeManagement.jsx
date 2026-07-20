@@ -158,7 +158,7 @@ const FeeManagement = () => {
       key: 'totalFee',
       render: (s) => (
         <span className="font-bold text-navy-900">
-          ₹{(s.totalFee !== undefined ? s.totalFee : 12000).toFixed(2)}
+          ₹{(s.totalFee ?? 0).toFixed(2)}
         </span>
       )
     },

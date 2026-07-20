@@ -102,8 +102,8 @@ const updateStudentDues = asyncHandler(async (req, res) => {
     throw new Error('Student not found');
   }
 
-  const parsedTuition = tuitionFee !== undefined ? Math.max(0, Number(tuitionFee) || 0) : (student.tuitionFee || 12000);
-  const parsedTransport = transportFee !== undefined ? Math.max(0, Number(transportFee) || 0) : (student.transportFee || 1800);
+  const parsedTuition = tuitionFee !== undefined ? Math.max(0, Number(tuitionFee) || 0) : (student.tuitionFee ?? 0);
+  const parsedTransport = transportFee !== undefined ? Math.max(0, Number(transportFee) || 0) : (student.transportFee ?? 0);
 
   student.tuitionFee = parsedTuition;
   student.transportFee = parsedTransport;
@@ -142,8 +142,8 @@ const getStudentFeeSummary = asyncHandler(async (req, res) => {
     throw new Error('Student not found');
   }
 
-  const tuition = student.tuitionFee !== undefined ? student.tuitionFee : 12000;
-  const transport = student.transportFee !== undefined ? student.transportFee : 1800;
+  const tuition = student.tuitionFee !== undefined ? student.tuitionFee : 0;
+  const transport = student.transportFee !== undefined ? student.transportFee : 0;
   const currentTotalFee = tuition + (student.usesTransport ? transport : 0);
 
   const payments = await FeePayment.find({ student: studentId });
