@@ -176,8 +176,8 @@ const studentSchema = new mongoose.Schema(
     },
     contactNo: {
       type: String,
-      required: [true, 'Please enter contact number'],
-      trim: true
+      trim: true,
+      default: ''
     },
     category: {
       type: String,
